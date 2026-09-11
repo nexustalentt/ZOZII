@@ -1,4 +1,4 @@
-import { supabase, adminKey } from './supabase'
+import { supabase, adminKey, isSupabaseConfigured } from './supabase'
 import type {
   AccessHistoryEntry,
   AccessStatus,
@@ -15,6 +15,13 @@ async function call(
   fn: string,
   args: Record<string, unknown>,
 ): Promise<{ data: unknown; error: string | null }> {
+  if (!isSupabaseConfigured) {
+    return {
+      data: null,
+      error:
+        'Supabase database is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables.',
+    }
+  }
   const { data, error } = await supabase.rpc(fn, args)
   if (error) return { data: null, error: error.message }
   return { data, error: null }

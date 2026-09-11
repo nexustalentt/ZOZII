@@ -44,7 +44,20 @@ function isAdminRoute(): boolean {
 }
 
 export default function App(): React.JSX.Element {
-  const [isAdmin] = useState(isAdminRoute)
+  const [isAdmin, setIsAdmin] = useState(isAdminRoute)
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setIsAdmin(isAdminRoute())
+    }
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('hashchange', handleLocationChange)
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('hashchange', handleLocationChange)
+    }
+  }, [])
+
   const [authed, setAuthed] = useState(
     () => sessionStorage.getItem(ADMIN_SESSION_KEY) === '1',
   )
@@ -94,10 +107,11 @@ export default function App(): React.JSX.Element {
   loadUsersRef.current = loadUsers
 
   useEffect(() => {
+    if (!isAdmin || !authed) return
     void loadUsers()
     const interval = window.setInterval(() => void loadUsersRef.current(), 30000)
     return () => window.clearInterval(interval)
-  }, [loadUsers])
+  }, [isAdmin, authed, loadUsers])
 
   const openUser = useCallback(async (user: AppUser) => {
     setSelectedUser(user)
