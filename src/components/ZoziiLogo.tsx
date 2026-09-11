@@ -14,8 +14,8 @@ export default function ZoziiLogo({ size = 28 }: ZoziiLogoProps): React.JSX.Elem
     >
       <defs>
         <linearGradient id="zozii-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8b7cf7" />
-          <stop offset="100%" stopColor="#2ee6c8" />
+          <stop offset="0%" stopColor="#22d472" />
+          <stop offset="100%" stopColor="#38bdf8" />
         </linearGradient>
       </defs>
       <path
@@ -25,10 +25,10 @@ export default function ZoziiLogo({ size = 28 }: ZoziiLogoProps): React.JSX.Elem
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="6" cy="6" r="2.8" fill="#8b7cf7" />
-      <circle cx="18" cy="6" r="2.8" fill="#2ee6c8" />
-      <circle cx="8" cy="18" r="2.8" fill="#8b7cf7" />
-      <circle cx="18" cy="18" r="2.8" fill="#2ee6c8" />
+      <circle cx="6" cy="6" r="2.8" fill="#22d472" />
+      <circle cx="18" cy="6" r="2.8" fill="#38bdf8" />
+      <circle cx="8" cy="18" r="2.8" fill="#22d472" />
+      <circle cx="18" cy="18" r="2.8" fill="#38bdf8" />
     </svg>
   )
 }
