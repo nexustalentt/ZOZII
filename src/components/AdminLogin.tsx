@@ -2,9 +2,13 @@ import { useState, type FormEvent } from 'react'
 import ZoziiLogo from './ZoziiLogo'
 
 export const ADMIN_USERNAME =
-  (import.meta.env.VITE_ADMIN_USERNAME as string | undefined) || 'admin'
+  (import.meta.env.VITE_ADMIN_USERNAME as string | undefined) ||
+  (import.meta.env.ADMIN_USERNAME as string | undefined) ||
+  'admin'
 export const ADMIN_PASSWORD =
-  (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) || 'admin'
+  (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) ||
+  (import.meta.env.ADMIN_PASSWORD as string | undefined) ||
+  'admin'
 export const ADMIN_SESSION_KEY = 'hireme-admin-session'
 
 interface AdminLoginProps {
