@@ -3,6 +3,7 @@ import type {
   AccessHistoryEntry,
   AccessStatus,
   ApiResult,
+  AppRelease,
   AppUser,
   PlanRequest,
   UserDetail,
@@ -235,4 +236,209 @@ export async function exeRegisterUser(
     p_email: email,
     p_device: null,
   })
+}
+
+// ------------------------------------------------------------ App Releases
+
+const STORAGE_BUCKET = 'releases'
+const LOCAL_STORAGE_KEY = 'zozii_active_release'
+
+export const DEFAULT_RELEASE: AppRelease = {
+  version: '0.1.0',
+  filename: 'DTDC Service Setup.exe',
+  download_url: '/DTDC Service Setup.exe',
+  file_size_bytes: 95525476,
+  has_release: false,
+}
+
+export async function fetchActiveRelease(): Promise<AppRelease> {
+  // 1. Try RPC get_active_release
+  try {
+    const { data, error } = await supabase.rpc('get_active_release')
+    if (!error && data && typeof data === 'object') {
+      const rec = data as Record<string, unknown>
+      if (rec.ok && rec.download_url) {
+        const release: AppRelease = {
+          id: rec.id as string | undefined,
+          version: (rec.version as string) || '0.1.0',
+          filename: (rec.filename as string) || 'DTDC Service Setup.exe',
+          file_size_bytes: rec.file_size_bytes ? Number(rec.file_size_bytes) : null,
+          download_url: rec.download_url as string,
+          release_notes: (rec.release_notes as string) || null,
+          updated_at: (rec.updated_at as string) || null,
+          has_release: true,
+        }
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(release))
+        } catch {}
+        return release
+      }
+    }
+  } catch {
+    // RPC may not exist yet
+  }
+
+  // 2. Direct table query fallback
+  try {
+    const { data } = await supabase
+      .from('app_releases')
+      .select('*')
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (data && data.download_url) {
+      const release: AppRelease = {
+        id: data.id,
+        version: data.version || '0.1.0',
+        filename: data.filename || 'DTDC Service Setup.exe',
+        file_size_bytes: data.file_size_bytes ? Number(data.file_size_bytes) : null,
+        download_url: data.download_url,
+        release_notes: data.release_notes || null,
+        updated_at: data.updated_at || null,
+        has_release: true,
+      }
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(release))
+      } catch {}
+      return release
+    }
+  } catch {
+    // Ignore table query errors
+  }
+
+  // 3. Fallback to localStorage if previously saved
+  try {
+    const cached = localStorage.getItem(LOCAL_STORAGE_KEY)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (parsed?.download_url) {
+        return parsed
+      }
+    }
+  } catch {
+    // Ignore JSON errors
+  }
+
+  // 4. Default bundled installer
+  return DEFAULT_RELEASE
+}
+
+export async function uploadReleaseFile(
+  file: File,
+  version: string = '0.1.0',
+  notes: string = '',
+): Promise<{ ok: boolean; release?: AppRelease; error?: string }> {
+  try {
+    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const storagePath = `installer_${Date.now()}_${cleanName}`
+
+    // Upload to Supabase Storage bucket 'releases'
+    const { error: uploadError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      })
+
+    if (uploadError) {
+      return {
+        ok: false,
+        error: `Storage upload failed: ${uploadError.message}. If the file exceeds Supabase free tier size limit, you can use the External Download URL option below.`,
+      }
+    }
+
+    // Retrieve public URL
+    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath)
+    const publicUrl = urlData.publicUrl
+
+    return await setActiveRelease({
+      version,
+      filename: file.name,
+      file_size_bytes: file.size,
+      download_url: publicUrl,
+      release_notes: notes || null,
+    })
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Unknown upload error occurred',
+    }
+  }
+}
+
+export async function setActiveRelease(
+  release: Partial<AppRelease> & { download_url: string },
+): Promise<{ ok: boolean; release?: AppRelease; error?: string }> {
+  const finalRelease: AppRelease = {
+    version: release.version?.trim() || '0.1.0',
+    filename: release.filename?.trim() || 'DTDC Service Setup.exe',
+    file_size_bytes: release.file_size_bytes ?? null,
+    download_url: release.download_url.trim(),
+    release_notes: release.release_notes || null,
+    updated_at: new Date().toISOString(),
+    is_active: true,
+    has_release: true,
+  }
+
+  // 1. Try RPC
+  try {
+    const { data, error } = await supabase.rpc('admin_set_active_release', {
+      p_download_url: finalRelease.download_url,
+      p_filename: finalRelease.filename,
+      p_file_size_bytes: finalRelease.file_size_bytes,
+      p_version: finalRelease.version,
+      p_release_notes: finalRelease.release_notes,
+      p_key: adminKey,
+    })
+    if (!error && (data as Record<string, unknown>)?.ok) {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalRelease))
+      } catch {}
+      return { ok: true, release: finalRelease }
+    }
+  } catch {
+    // Fall back to direct table update
+  }
+
+  // 2. Direct table update fallback
+  try {
+    await supabase.from('app_releases').update({ is_active: false }).eq('is_active', true)
+    const { data: inserted, error: insertError } = await supabase
+      .from('app_releases')
+      .insert({
+        version: finalRelease.version,
+        filename: finalRelease.filename,
+        file_size_bytes: finalRelease.file_size_bytes,
+        download_url: finalRelease.download_url,
+        release_notes: finalRelease.release_notes,
+        is_active: true,
+      })
+      .select()
+      .single()
+
+    if (!insertError && inserted) {
+      finalRelease.id = inserted.id
+    }
+  } catch {
+    // Ignore table missing errors
+  }
+
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalRelease))
+  } catch {}
+  return { ok: true, release: finalRelease }
+}
+
+export function resetToBundledRelease(): AppRelease {
+  try {
+    localStorage.removeItem(LOCAL_STORAGE_KEY)
+  } catch {}
+  void (async () => {
+    try {
+      await supabase.from('app_releases').update({ is_active: false }).eq('is_active', true)
+    } catch {}
+  })()
+  return DEFAULT_RELEASE
 }

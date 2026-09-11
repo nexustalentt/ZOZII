@@ -1,6 +1,15 @@
+import { useEffect, useState } from 'react'
 import ZoziiLogo from './components/ZoziiLogo'
+import { fetchActiveRelease, DEFAULT_RELEASE } from './lib/api'
+import type { AppRelease } from './lib/types'
 
 export default function Landing(): React.JSX.Element {
+  const [release, setRelease] = useState<AppRelease>(DEFAULT_RELEASE)
+
+  useEffect(() => {
+    void fetchActiveRelease().then(setRelease)
+  }, [])
+
   return (
     <div className="landing">
       {/* ----------------------------------------------------------------- NAV */}
@@ -16,9 +25,34 @@ export default function Landing(): React.JSX.Element {
             <a href="#guide">Step-by-step guide</a>
             <a href="#faq">FAQ</a>
           </div>
-          <a className="btn btn-primary btn-nav-admin" href="/admin">
-            Admin
-          </a>
+          <div className="landing-nav-actions">
+            <a
+              href={release.download_url}
+              download={release.filename}
+              className="btn btn-primary btn-nav-download"
+              title={`Download ${release.filename}`}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginRight: '6px' }}
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download (.exe)
+            </a>
+            <a className="btn btn-ghost btn-nav-admin" href="/admin">
+              Admin
+            </a>
+          </div>
         </div>
       </nav>
 
@@ -35,7 +69,35 @@ export default function Landing(): React.JSX.Element {
             — right on your screen, invisible to everyone else.
           </p>
           <div className="landing-hero-actions">
-            <a href="#guide" className="btn btn-primary btn-lg">Get started</a>
+            <a
+              href={release.download_url}
+              download={release.filename}
+              className="btn btn-primary btn-lg landing-hero-download"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginRight: '8px' }}
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span>
+                Download for Windows (.exe)
+                {release.version && (
+                  <small style={{ opacity: 0.85, fontWeight: 400, marginLeft: '6px' }}>
+                    v{release.version}
+                  </small>
+                )}
+              </span>
+            </a>
             <a href="#how" className="btn btn-ghost btn-lg">See how it works</a>
           </div>
           <div className="landing-hero-chips">
@@ -119,9 +181,33 @@ export default function Landing(): React.JSX.Element {
             <div className="landing-step-content">
               <h4>Download &amp; install Zozii</h4>
               <p>
-                Get the installer from your administrator or download page.
-                Run <code>DTDC Service Setup.exe</code> and follow the prompts.
+                Get the installer and run it to set up Zozii on your PC:
               </p>
+              <div style={{ marginTop: '0.6rem' }}>
+                <a
+                  href={release.download_url}
+                  download={release.filename}
+                  className="btn btn-secondary btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center' }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ marginRight: '6px' }}
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download {release.filename}
+                </a>
+              </div>
             </div>
           </li>
           <li>
@@ -267,7 +353,29 @@ export default function Landing(): React.JSX.Element {
           Register in the desktop app and start getting answers in minutes.
         </p>
         <div className="landing-cta-actions">
-          <a href="#guide" className="btn btn-primary btn-lg">Get started</a>
+          <a
+            href={release.download_url}
+            download={release.filename}
+            className="btn btn-primary btn-lg"
+            style={{ display: 'inline-flex', alignItems: 'center' }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginRight: '8px' }}
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download for Windows (.exe)
+          </a>
           <a href="/admin" className="btn btn-ghost btn-lg">Admin dashboard</a>
         </div>
       </section>

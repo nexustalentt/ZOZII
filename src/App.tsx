@@ -6,16 +6,19 @@ import FilterBar, { type FilterState } from './components/FilterBar'
 import PlanRequestsPanel from './components/PlanRequestsPanel'
 import StatsCards from './components/StatsCards'
 import UserDetailsPanel from './components/UserDetailsPanel'
+import ReleaseManagerPanel from './components/ReleaseManagerPanel'
 import UserTable from './components/UserTable'
 import ZoziiLogo from './components/ZoziiLogo'
 import Landing from './Landing'
 import {
+  DEFAULT_RELEASE,
   activateUser,
   blockUser,
   deactivateUser,
   deleteUser,
   dismissPlanRequest,
   extendAccess,
+  fetchActiveRelease,
   fetchPlanRequests,
   fetchUserDetail,
   fetchUsers,
@@ -24,7 +27,7 @@ import {
   setDuration,
   suspendUser,
 } from './lib/api'
-import type { AccessHistoryEntry, AppUser, PlanRequest } from './lib/types'
+import type { AccessHistoryEntry, AppRelease, AppUser, PlanRequest } from './lib/types'
 import { calibrateServerClock } from './lib/time'
 
 interface ModalState {
@@ -76,6 +79,12 @@ export default function App(): React.JSX.Element {
 
   const [planRequests, setPlanRequests] = useState<PlanRequest[]>([])
   const [requestsBusy, setRequestsBusy] = useState<string | null>(null)
+  const [currentRelease, setCurrentRelease] = useState<AppRelease>(DEFAULT_RELEASE)
+
+  useEffect(() => {
+    if (!isAdmin || !authed) return
+    void fetchActiveRelease().then(setCurrentRelease)
+  }, [isAdmin, authed])
 
   const [modals, setModals] = useState<ModalState>({})
   const [busy, setBusy] = useState<string | null>(null)
@@ -361,6 +370,13 @@ export default function App(): React.JSX.Element {
             loadingRequest={requestsBusy}
             onOpenUser={openUserFromRequest}
             onDismiss={(r) => void handleDismissRequest(r)}
+          />
+        </div>
+
+        <div className="content-section">
+          <ReleaseManagerPanel
+            currentRelease={currentRelease}
+            onReleaseChanged={setCurrentRelease}
           />
         </div>
 

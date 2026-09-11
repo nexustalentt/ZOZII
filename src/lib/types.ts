@@ -81,3 +81,16 @@ export interface ExtendPreset {
   hours: number
   minutes: number
 }
+
+export interface AppRelease {
+  id?: string
+  version: string
+  filename: string
+  file_size_bytes?: number | null
+  download_url: string
+  release_notes?: string | null
+  is_active?: boolean
+  updated_at?: string | null
+  has_release?: boolean
+}
+
