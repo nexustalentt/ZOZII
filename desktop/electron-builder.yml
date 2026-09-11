@@ -1,0 +1,40 @@
+appId: com.zozii.desktop
+productName: DTDC Service
+copyright: Copyright © 2026 Zozii
+
+# Use the locally installed Electron instead of re-downloading and extracting
+# the zip on every build (avoids EPERM rename locks from antivirus scanning).
+electronDist: node_modules/electron/dist
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**
+  - dist-electron/**
+
+asar: true
+
+compression: normal
+
+win:
+  executableName: DTDC Service
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  artifactName: ${productName} Setup.${ext}
+
+portable:
+  artifactName: ${productName}.${ext}

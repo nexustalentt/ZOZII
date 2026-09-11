@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+desktop/node_modules/
+.pnp
+.pnp.js
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+desktop/.env
+desktop/.env.*
+!desktop/.env.example
+
+# Build and distribution outputs
+dist/
+dist-electron/
+desktop/dist/
+desktop/dist-electron/
+desktop/release/
+
+# Large installers, binaries, and electron-builder temp files
+*.exe
+*.msi
+*.blockmap
+*.zip
+*.tar.gz
+*.dmg
+*.app
+builder-debug.yml
+builder-effective-config.yaml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor and OS system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
