@@ -89,6 +89,11 @@ export interface AuthRegisterResult {
   error?: string
 }
 
+export interface AuthOtpResult {
+  ok: boolean
+  error?: string
+}
+
 export interface PlanRequestResult {
   ok: boolean
   note?: string
@@ -132,6 +137,8 @@ export interface ZoziiBridge {
     email: string,
   ) => Promise<AuthRegisterResult>
   authLogout: () => Promise<void>
+  authSendOtp: (email: string) => Promise<AuthOtpResult>
+  authVerifyOtp: (email: string, token: string) => Promise<AuthOtpResult>
   usageStart: () => Promise<AuthValidateResult>
   usageStop: () => Promise<AuthValidateResult>
   usageHeartbeat: () => Promise<AuthValidateResult>

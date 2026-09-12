@@ -34,7 +34,7 @@ export default function ConnectionDialog({
 
   if (!open) return null
 
-  const providerName = selectedProvider === 'groq' ? 'Groq' : 'Gemini'
+  const providerName = selectedProvider === 'groq' ? 'API 1' : 'API 2'
 
   const selectProvider = async (next: AiProvider): Promise<void> => {
     setSelectedProvider(next)
@@ -77,10 +77,10 @@ export default function ConnectionDialog({
           disabled={connecting}
           onChange={(event) => void selectProvider(event.target.value as AiProvider)}
         >
-          <option value="groq">Groq</option>
-          <option value="gemini">Gemini</option>
+          <option value="groq">API 1</option>
+          <option value="gemini">API 2</option>
         </select>
-        <p className="dialog-subtitle">Enter your {providerName} API Key</p>
+        <p className="dialog-subtitle">Enter your {providerName} Key</p>
 
         <div className="api-key-field">
           <input ref={inputRef} type={visible ? 'text' : 'password'} className="dialog-input" placeholder="**********************" value={apiKey} disabled={connecting} spellCheck={false} autoComplete="off" onChange={(event) => setApiKey(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void connect(); if (event.key === 'Escape') onClose() }} />
@@ -88,13 +88,13 @@ export default function ConnectionDialog({
         </div>
 
         {error === 'invalid' && (
-          <p className="dialog-error">Invalid {providerName} API key. Please check your key and try again.</p>
+          <p className="dialog-error">Invalid {providerName} key. Please check your key and try again.</p>
         )}
         {error === 'network' && (
           <p className="dialog-error">Could not reach {providerName}. Check your internet connection and try again.</p>
         )}
         {error === 'model' && (
-          <p className="dialog-error">This API project has no Gemini text model available. Enable Gemini API access or choose a project with model access.</p>
+          <p className="dialog-error">This project has no text model available. Enable API access or choose a project with model access.</p>
         )}
 
         <div className="dialog-actions">

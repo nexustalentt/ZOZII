@@ -1,4 +1,4 @@
-import type { AuthRegisterResult, AuthValidateResult, PlanRequestResult } from '../types/zozii'
+import type { AuthOtpResult, AuthRegisterResult, AuthValidateResult, PlanRequestResult } from '../types/zozii'
 
 // Thin renderer wrapper around the main-process Supabase bridge. All network
 // access happens in the Electron main process (which holds the secret key and
@@ -48,6 +48,20 @@ export async function backendRegister(
 
 export async function backendLogout(): Promise<void> {
   await window.zozii?.authLogout()
+}
+
+export async function backendSendOtp(email: string): Promise<AuthOtpResult> {
+  if (!window.zozii?.authSendOtp) {
+    return { ok: false, error: 'Backend bridge is unavailable.' }
+  }
+  return window.zozii.authSendOtp(email)
+}
+
+export async function backendVerifyOtp(email: string, token: string): Promise<AuthOtpResult> {
+  if (!window.zozii?.authVerifyOtp) {
+    return { ok: false, error: 'Backend bridge is unavailable.' }
+  }
+  return window.zozii.authVerifyOtp(email, token)
 }
 
 export async function backendUsageStart(): Promise<AuthValidateResult> {

@@ -1176,6 +1176,45 @@ body {
   line-height: 1.55;
 }
 
+.auth-otp-input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 8px;
+  font-weight: 700;
+}
+
+.auth-otp-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+
+.auth-otp-actions .auth-toggle-link {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.auth-otp-actions .auth-toggle-link:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.auth-otp-actions .auth-toggle-link:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .preset-chip {
   display: flex;
   align-items: center;

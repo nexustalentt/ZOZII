@@ -5,11 +5,14 @@ import {
   logout,
   revalidateCached,
   registerUser,
+  requestEmailOtp,
   sendPlanRequest,
   usageHeartbeat,
   usageStart,
   usageStop,
+  verifyEmailOtp,
   type AuthValidateResult,
+  type OtpResult,
   type PlanRequestResult,
   type RegisterResult,
 } from './auth'
@@ -45,6 +48,24 @@ export function registerAuthIpc(): void {
       const n = typeof name === 'string' ? name : ''
       const e = typeof email === 'string' ? email : ''
       return registerUser(u, p, n, e)
+    },
+  )
+
+  // Email OTP gate used before registration: send, then verify the code.
+  ipcMain.handle(
+    'zozii:auth-send-otp',
+    (_event, email: unknown): Promise<OtpResult> => {
+      const e = typeof email === 'string' ? email : ''
+      return requestEmailOtp(e)
+    },
+  )
+
+  ipcMain.handle(
+    'zozii:auth-verify-otp',
+    (_event, email: unknown, token: unknown): Promise<OtpResult> => {
+      const e = typeof email === 'string' ? email : ''
+      const t = typeof token === 'string' ? token : ''
+      return verifyEmailOtp(e, t)
     },
   )
 

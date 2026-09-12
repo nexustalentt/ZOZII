@@ -32,7 +32,7 @@ export default function GroqStatus({
     }
   }, [open])
 
-  const providerName = provider === 'groq' ? 'Groq' : 'Gemini'
+  const providerName = provider === 'groq' ? 'API 1' : 'API 2'
   const statusText = connected ? `${providerName}: Connected ✓` : `${providerName}: Not Connected`
 
   return (

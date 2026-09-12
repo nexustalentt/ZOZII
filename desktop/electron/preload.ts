@@ -85,6 +85,11 @@ export interface AuthRegisterResult {
   error?: string
 }
 
+export interface AuthOtpResult {
+  ok: boolean
+  error?: string
+}
+
 export interface PlanRequestResult {
   ok: boolean
   note?: string
@@ -153,6 +158,10 @@ const bridge = {
   ): Promise<AuthRegisterResult> =>
     ipcRenderer.invoke('zozii:auth-register', username, password, name, email),
   authLogout: (): Promise<void> => ipcRenderer.invoke('zozii:auth-logout'),
+  authSendOtp: (email: string): Promise<AuthOtpResult> =>
+    ipcRenderer.invoke('zozii:auth-send-otp', email),
+  authVerifyOtp: (email: string, token: string): Promise<AuthOtpResult> =>
+    ipcRenderer.invoke('zozii:auth-verify-otp', email, token),
   usageStart: (): Promise<AuthValidateResult> => ipcRenderer.invoke('zozii:usage-start'),
   usageStop: (): Promise<AuthValidateResult> => ipcRenderer.invoke('zozii:usage-stop'),
   usageHeartbeat: (): Promise<AuthValidateResult> => ipcRenderer.invoke('zozii:usage-heartbeat'),

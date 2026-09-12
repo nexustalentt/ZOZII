@@ -187,7 +187,7 @@ function SettingsMenu({
     void window.zozii?.setAlwaysOnTop(next)
   }
 
-  const providerName = aiProvider === 'groq' ? 'Groq' : 'Gemini'
+  const providerName = aiProvider === 'groq' ? 'API 1' : 'API 2'
 
   return (
     <div className="settings-wrap" ref={rootRef}>
@@ -384,7 +384,7 @@ export default function AssistantHeader(props: AssistantHeaderProps): React.JSX.
           type="button"
           className="icon-button"
           onClick={onAddConnection}
-          title={groqConnected ? `${aiProvider === 'groq' ? 'Groq' : 'Gemini'}: Connected` : 'AI Not Connected - Click to configure'}
+          title={groqConnected ? `${aiProvider === 'groq' ? 'API 1' : 'API 2'}: Connected` : 'AI Not Connected - Click to configure'}
         >
           <SignalBarsIcon connected={groqConnected} />
         </button>

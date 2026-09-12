@@ -29,6 +29,11 @@ export interface PlanRequestResult {
   error?: string
 }
 
+export interface OtpResult {
+  ok: boolean
+  error?: string
+}
+
 // The EXE's Supabase client. Uses the PUBLIC publishable (anon) key — all
 // access goes through SECURITY DEFINER RPCs; direct row access is denied by RLS.
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -80,6 +85,34 @@ function clearCredentials(): void {
   } catch {
     // best effort
   }
+}
+
+// ---------------------------------------------------------------- OTP diagnostics
+// The OTP email is sent by Supabase Auth (server-side) through the project's
+// SMTP/Resend provider. Delivery failures come back as a generic 500
+// "Error sending confirmation email", so we log the raw detail to a file and
+// map it to an actionable message instead of showing the raw error.
+function logOtpFailure(context: string, detail: unknown): void {
+  try {
+    const dir = path.join(appPath(), 'logs')
+    fs.mkdirSync(dir, { recursive: true })
+    fs.appendFileSync(
+      path.join(dir, 'otp.log'),
+      `${new Date().toISOString()} [${context}] ${JSON.stringify(detail)}\n`,
+    )
+  } catch {
+    // best effort
+  }
+}
+
+function describeOtpRequestError(status: number | undefined, message: string): string {
+  if (status === 429 || /rate limit|too many requests|exceeded/i.test(message)) {
+    return 'Too many requests. Please wait a moment before requesting a new code.'
+  }
+  if (status === 500 || /confirmation email/i.test(message)) {
+    return "We couldn't send the verification code. Check Supabase → Authentication → Email: SMTP/Resend must be enabled with a verified sender, then try again."
+  }
+  return message
 }
 
 // ---------------------------------------------------------------- device fingerprint
@@ -170,6 +203,50 @@ export async function revalidateCached(): Promise<AuthValidateResult> {
 export async function hasCachedCredentials(): Promise<boolean> {
   const creds = readCredentials()
   return !!creds?.username && !!creds.password
+}
+
+// Email OTP gate used before registering. A 6-digit code is emailed to the
+// address via Supabase Auth (sender configured in the project dashboard). The
+// code only proves the email belongs to the user; the account itself is still
+// created by register_user below.
+export async function requestEmailOtp(email: string): Promise<OtpResult> {
+  const clean = email.trim().toLowerCase()
+  if (!clean || !clean.includes('@')) {
+    return { ok: false, error: 'Please enter a valid email address.' }
+  }
+  const { error } = await supabase.auth.signInWithOtp({
+    email: clean,
+    options: { shouldCreateUser: true },
+  })
+  if (error) {
+    logOtpFailure('send', { email: clean, status: error.status, message: error.message })
+    return { ok: false, error: describeOtpRequestError(error.status, error.message) }
+  }
+  return { ok: true }
+}
+
+// Verify the code the user received. On success the email's ownership is
+// proven and the caller proceeds with registerUser to create the account.
+export async function verifyEmailOtp(email: string, token: string): Promise<OtpResult> {
+  const cleanToken = token.trim()
+  if (!cleanToken) {
+    return { ok: false, error: 'Enter the code that was sent to your email.' }
+  }
+  const { error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token: cleanToken,
+    type: 'email',
+  })
+  if (error) {
+    logOtpFailure('verify', { email: email.trim().toLowerCase(), status: error.status, message: error.message })
+    const invalid =
+      error.status === 400 ||
+      error.status === 403 ||
+      error.status === 422 ||
+      /expired|invalid|has expired/i.test(error.message)
+    return { ok: false, error: invalid ? 'Invalid or expired code.' : error.message }
+  }
+  return { ok: true }
 }
 
 // Register a new user, then optionally auto-login.
