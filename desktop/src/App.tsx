@@ -1183,6 +1183,15 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
           >
             {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
           </button>
+
+          <button
+            type="button"
+            className="auth-toggle-link"
+            style={{ marginTop: '8px', opacity: 0.85, fontSize: '12px' }}
+            onClick={() => void window.zozii?.openExternal('https://zozii-iota.vercel.app/')}
+          >
+            🌐 Visit ZOZII Website (zozii-iota.vercel.app)
+          </button>
         </form>
       </div>
     </div>

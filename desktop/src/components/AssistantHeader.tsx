@@ -100,7 +100,12 @@ function LogoutIcon(): React.JSX.Element {
 
 function ZoziiLogo(): React.JSX.Element {
   return (
-    <div className="brand-logo-wrap" style={{ display: 'flex', alignItems: 'center', gap: '7px', WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+    <div
+      className="brand-logo-wrap"
+      style={{ display: 'flex', alignItems: 'center', gap: '7px', WebkitAppRegion: 'no-drag', cursor: 'pointer' } as React.CSSProperties}
+      onClick={() => void window.zozii?.openExternal(SITE_URL)}
+      title="Open ZOZII website (https://zozii-iota.vercel.app/)"
+    >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
         <defs>
           <linearGradient id="z-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -272,7 +277,7 @@ function SettingsMenu({
             className="settings-row"
             onClick={() => { void window.zozii?.openExternal(SITE_URL); setOpen(false) }}
           >
-            <span>Visit Zozii website</span>
+            <span>Visit ZOZII website</span>
           </button>
           <div className="settings-divider" />
           <p className="settings-version">ZOZII v{version} · Nexus Talent</p>

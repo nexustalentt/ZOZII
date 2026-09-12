@@ -30,7 +30,7 @@ export default function Landing(): React.JSX.Element {
       {/* ----------------------------------------------------------------- NAV */}
       <nav className="landing-nav">
         <div className="landing-nav-inner">
-          <a href="/" className="landing-nav-brand">
+          <a href="https://zozii-iota.vercel.app/" className="landing-nav-brand" title="ZOZII Official Website">
             <ZoziiLogo size={28} />
             <span>Zozii</span>
             <span className="landing-nav-brand-badge">v{release.version || '1.0.0'}</span>
@@ -555,8 +555,14 @@ export default function Landing(): React.JSX.Element {
       <footer className="landing-footer">
         <div className="landing-footer-inner">
           <div className="landing-footer-brand">
-            <ZoziiLogo size={22} />
-            <span className="landing-footer-name">Zozii</span>
+            <a
+              href="https://zozii-iota.vercel.app/"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}
+              title="ZOZII Official Website"
+            >
+              <ZoziiLogo size={22} />
+              <span className="landing-footer-name">Zozii</span>
+            </a>
             <span className="landing-footer-byline">by Nexus Talent · a Nexus Talent product</span>
           </div>
 
