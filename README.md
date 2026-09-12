@@ -1,4 +1,11 @@
-# HireMe — Personal AI Desktop Assistant
+# Zozii / HireMe — Invisible AI Desktop Assistant
+
+[![Download Windows EXE](https://img.shields.io/badge/Download-Windows%20EXE%20(v1.09.01)-22c55e?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/nexustalentt/ZOZII/releases/download/v1.09.01/DTDC.Service.Setup.exe)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.09.01-blue?style=for-the-badge&logo=github)](https://github.com/nexustalentt/ZOZII/releases/tag/v1.09.01)
+
+### 📥 Direct Download
+- **Windows Installer (.exe)**: [**Download DTDC.Service.Setup.exe (v1.09.01)**](https://github.com/nexustalentt/ZOZII/releases/download/v1.09.01/DTDC.Service.Setup.exe) *(Direct Download, ~91 MB)*
+- **GitHub Release Page**: [**NexusTalent v1.09.01 on GitHub**](https://github.com/nexustalentt/ZOZII/releases/tag/v1.09.01)
 
 Electron + React desktop assistant with Groq-powered Q&A, microphone + meeting-audio listening, and screen-share stealth.
 

@@ -1,7 +1,7 @@
 {
   "name": "hireme-website",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.09.01",
   "type": "module",
   "scripts": {
     "dev": "vite",

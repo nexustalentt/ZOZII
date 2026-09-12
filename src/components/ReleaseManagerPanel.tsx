@@ -23,7 +23,7 @@ export default function ReleaseManagerPanel({
 }: ReleaseManagerPanelProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<'upload' | 'external'>('upload')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [version, setVersion] = useState(currentRelease.version || '0.1.0')
+  const [version, setVersion] = useState(currentRelease.version || '1.09.01')
   const [notes, setNotes] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<string | null>(null)
@@ -33,8 +33,8 @@ export default function ReleaseManagerPanel({
 
   // External URL form state
   const [extUrl, setExtUrl] = useState('')
-  const [extFilename, setExtFilename] = useState('DTDC Service Setup.exe')
-  const [extVersion, setExtVersion] = useState('0.1.0')
+  const [extFilename, setExtFilename] = useState('DTDC.Service.Setup.exe')
+  const [extVersion, setExtVersion] = useState('1.09.01')
   const [isSavingExt, setIsSavingExt] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -251,7 +251,7 @@ export default function ReleaseManagerPanel({
               ) : (
                 <div>
                   <strong>Click to select or drag &amp; drop an installer EXE</strong>
-                  <p>Accepts .exe files (e.g. DTDC Service Setup.exe)</p>
+                  <p>Accepts .exe files (e.g. DTDC.Service.Setup.exe)</p>
                 </div>
               )}
             </label>
@@ -266,7 +266,7 @@ export default function ReleaseManagerPanel({
                 id="release-version"
                 type="text"
                 className="release-input"
-                placeholder="e.g. 0.1.0"
+                placeholder="e.g. 1.09.01"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
                 disabled={isUploading}
@@ -314,7 +314,7 @@ export default function ReleaseManagerPanel({
               id="ext-url"
               type="url"
               className="release-input"
-              placeholder="https://github.com/.../releases/download/v0.1.0/DTDC-Service-Setup.exe"
+              placeholder="https://github.com/nexustalentt/ZOZII/releases/download/v1.09.01/DTDC.Service.Setup.exe"
               value={extUrl}
               onChange={(e) => setExtUrl(e.target.value)}
               disabled={isSavingExt}
@@ -335,7 +335,7 @@ export default function ReleaseManagerPanel({
                 id="ext-filename"
                 type="text"
                 className="release-input"
-                placeholder="DTDC Service Setup.exe"
+                placeholder="DTDC.Service.Setup.exe"
                 value={extFilename}
                 onChange={(e) => setExtFilename(e.target.value)}
                 disabled={isSavingExt}
@@ -349,7 +349,7 @@ export default function ReleaseManagerPanel({
                 id="ext-version"
                 type="text"
                 className="release-input"
-                placeholder="0.1.0"
+                placeholder="1.09.01"
                 value={extVersion}
                 onChange={(e) => setExtVersion(e.target.value)}
                 disabled={isSavingExt}

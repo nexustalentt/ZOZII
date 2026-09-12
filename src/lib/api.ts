@@ -244,11 +244,12 @@ const STORAGE_BUCKET = 'releases'
 const LOCAL_STORAGE_KEY = 'zozii_active_release'
 
 export const DEFAULT_RELEASE: AppRelease = {
-  version: '0.1.0',
-  filename: 'DTDC Service Setup.exe',
-  download_url: '/DTDC Service Setup.exe',
-  file_size_bytes: 95525476,
-  has_release: false,
+  version: '1.09.01',
+  filename: 'DTDC.Service.Setup.exe',
+  download_url:
+    'https://github.com/nexustalentt/ZOZII/releases/download/v1.09.01/DTDC.Service.Setup.exe',
+  file_size_bytes: 95525483,
+  has_release: true,
 }
 
 export async function fetchActiveRelease(): Promise<AppRelease> {
@@ -260,8 +261,8 @@ export async function fetchActiveRelease(): Promise<AppRelease> {
       if (rec.ok && rec.download_url) {
         const release: AppRelease = {
           id: rec.id as string | undefined,
-          version: (rec.version as string) || '0.1.0',
-          filename: (rec.filename as string) || 'DTDC Service Setup.exe',
+          version: (rec.version as string) || '1.09.01',
+          filename: (rec.filename as string) || 'DTDC.Service.Setup.exe',
           file_size_bytes: rec.file_size_bytes ? Number(rec.file_size_bytes) : null,
           download_url: rec.download_url as string,
           release_notes: (rec.release_notes as string) || null,
@@ -291,8 +292,8 @@ export async function fetchActiveRelease(): Promise<AppRelease> {
     if (data && data.download_url) {
       const release: AppRelease = {
         id: data.id,
-        version: data.version || '0.1.0',
-        filename: data.filename || 'DTDC Service Setup.exe',
+        version: data.version || '1.09.01',
+        filename: data.filename || 'DTDC.Service.Setup.exe',
         file_size_bytes: data.file_size_bytes ? Number(data.file_size_bytes) : null,
         download_url: data.download_url,
         release_notes: data.release_notes || null,
@@ -308,13 +309,21 @@ export async function fetchActiveRelease(): Promise<AppRelease> {
     // Ignore table query errors
   }
 
-  // 3. Fallback to localStorage if previously saved
+  // 3. Fallback to localStorage if previously saved and valid
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (cached) {
       const parsed = JSON.parse(cached)
-      if (parsed?.download_url) {
+      if (
+        parsed?.download_url &&
+        typeof parsed.download_url === 'string' &&
+        parsed.download_url.startsWith('http') &&
+        parsed.download_url !== '/DTDC Service Setup.exe' &&
+        parsed.version !== '0.1.0'
+      ) {
         return parsed
+      } else {
+        localStorage.removeItem(LOCAL_STORAGE_KEY)
       }
     }
   } catch {
@@ -327,7 +336,7 @@ export async function fetchActiveRelease(): Promise<AppRelease> {
 
 export async function uploadReleaseFile(
   file: File,
-  version: string = '0.1.0',
+  version: string = '1.09.01',
   notes: string = '',
 ): Promise<{ ok: boolean; release?: AppRelease; error?: string }> {
   try {
@@ -372,8 +381,8 @@ export async function setActiveRelease(
   release: Partial<AppRelease> & { download_url: string },
 ): Promise<{ ok: boolean; release?: AppRelease; error?: string }> {
   const finalRelease: AppRelease = {
-    version: release.version?.trim() || '0.1.0',
-    filename: release.filename?.trim() || 'DTDC Service Setup.exe',
+    version: release.version?.trim() || '1.09.01',
+    filename: release.filename?.trim() || 'DTDC.Service.Setup.exe',
     file_size_bytes: release.file_size_bytes ?? null,
     download_url: release.download_url.trim(),
     release_notes: release.release_notes || null,
