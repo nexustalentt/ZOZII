@@ -9,12 +9,10 @@ import {
   backendLogout,
   backendRevalidate,
   backendRegister,
-  backendSendOtp,
   backendSendPlanRequest,
   backendUsageHeartbeat,
   backendUsageStart,
   backendUsageStop,
-  backendVerifyOtp,
   validateErrorMessage,
   type AccessState,
 } from './lib/backend'
@@ -1010,65 +1008,15 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [otpStep, setOtpStep] = useState(false)
-  const [otp, setOtp] = useState('')
-  const [resendIn, setResendIn] = useState(0)
-  const resendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [lastOpen, setLastOpen] = useState(open)
-
-  const stopResendTimer = useCallback(() => {
-    if (resendTimerRef.current) {
-      clearInterval(resendTimerRef.current)
-      resendTimerRef.current = null
-    }
-  }, [])
-
-  const startResendCooldown = useCallback(() => {
-    stopResendTimer()
-    setResendIn(60)
-    resendTimerRef.current = setInterval(() => {
-      setResendIn((secs) => {
-        if (secs <= 1) {
-          stopResendTimer()
-          return 0
-        }
-        return secs - 1
-      })
-    }, 1000)
-  }, [stopResendTimer])
-
-  useEffect(() => () => stopResendTimer(), [stopResendTimer])
 
   useEffect(() => {
     if (open && !lastOpen) {
       setError('')
       setBusy(false)
-      setOtpStep(false)
-      setOtp('')
-      setResendIn(0)
-      stopResendTimer()
     }
     setLastOpen(open)
-  }, [open, lastOpen, stopResendTimer])
-
-  const sendOtpToEmail = useCallback(
-    (emailTo: string): void => {
-      setBusy(true)
-      setError('')
-      void (async () => {
-        const res = await backendSendOtp(emailTo)
-        setBusy(false)
-        if (!res.ok) {
-          setError(res.error ?? 'Could not send the verification code.')
-          return
-        }
-        setOtp('')
-        setOtpStep(true)
-        startResendCooldown()
-      })()
-    },
-    [startResendCooldown],
-  )
+  }, [open, lastOpen])
 
   if (!open) return null
 
@@ -1093,26 +1041,9 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
         return
       }
 
-      if (!otpStep) {
-        // Step 1: email the verification code to the entered address.
-        sendOtpToEmail(trimmedEmail)
-        return
-      }
-
-      // Step 2: verify the code, then create the account.
-      if (!/^\d{6}$/.test(otp.trim())) {
-        setError('Enter the 6-digit code you received.')
-        return
-      }
       setBusy(true)
       void (async () => {
-        const verify = await backendVerifyOtp(trimmedEmail, otp.trim())
-        if (!verify.ok) {
-          setError(verify.error ?? 'Invalid code.')
-          setBusy(false)
-          return
-        }
-        // Email proven — register (the email is the identity: username = email).
+        // The email is the identity: register with it as both username and email.
         const res = await backendRegister(trimmedEmail, password, name.trim(), trimmedEmail)
         if (!res.ok) {
           setError(res.error ?? 'Registration failed.')
@@ -1176,52 +1107,29 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
 
         <form className="auth-dialog-form" onSubmit={handleSubmit}>
           {isRegister ? (
-            otpStep ? (
-              <>
-                <p className="auth-hint" style={{ margin: 0 }}>
-                  Enter the <strong>6-digit code</strong> sent to{' '}
-                  <strong>{email.trim()}</strong> to verify your email and finish
-                  creating your account.
-                </p>
-                <div className="auth-input-group">
-                  <label className="auth-label">Verification code</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    className="auth-input auth-otp-input"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="000000"
-                    autoComplete="one-time-code"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="auth-input-group">
-                  <label className="auth-label">Email</label>
-                  <input
-                    type="email"
-                    className="auth-input"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    autoComplete="email"
-                  />
-                </div>
-                <div className="auth-input-group">
-                  <label className="auth-label">Name (optional)</label>
-                  <input
-                    type="text"
-                    className="auth-input"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
-                  />
-                </div>
-              </>
-            )
+            <>
+              <div className="auth-input-group">
+                <label className="auth-label">Email</label>
+                <input
+                  type="email"
+                  className="auth-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  autoComplete="email"
+                />
+              </div>
+              <div className="auth-input-group">
+                <label className="auth-label">Name (optional)</label>
+                <input
+                  type="text"
+                  className="auth-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                />
+              </div>
+            </>
           ) : (
             <div className="auth-input-group">
               <label className="auth-label">Email or username</label>
@@ -1236,21 +1144,19 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
             </div>
           )}
 
-          {(!isRegister || !otpStep) && (
-            <div className="auth-input-group">
-              <label className="auth-label">Password</label>
-              <input
-                type="password"
-                className="auth-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                autoComplete={isRegister ? 'new-password' : 'current-password'}
-              />
-            </div>
-          )}
+          <div className="auth-input-group">
+            <label className="auth-label">Password</label>
+            <input
+              type="password"
+              className="auth-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
+            />
+          </div>
 
-          {isRegister && !otpStep && (
+          {isRegister && (
             <>
               <div className="auth-input-group">
                 <label className="auth-label">Confirm Password</label>
@@ -1264,47 +1170,15 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
                 />
               </div>
               <p className="auth-hint" style={{ margin: 0 }}>
-                New accounts start with a <strong>free 10-minute / 10-question trial</strong> —
-                start using it right away!
+                New accounts start with a <strong>free 10-minute / 10-question trial</strong> — start using it right away!
               </p>
             </>
-          )}
-
-          {isRegister && otpStep && (
-            <div className="auth-otp-actions">
-              <button
-                type="button"
-                className="auth-toggle-link"
-                disabled={busy || resendIn > 0}
-                onClick={() => sendOtpToEmail(email.trim())}
-              >
-                {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
-              </button>
-              <button
-                type="button"
-                className="auth-toggle-link"
-                disabled={busy}
-                onClick={() => {
-                  setOtpStep(false)
-                  setOtp('')
-                  setError('')
-                }}
-              >
-                Change email
-              </button>
-            </div>
           )}
 
           {error && <div className="auth-error">{error}</div>}
 
           <button type="submit" className="auth-button" disabled={busy}>
-            {busy
-              ? 'Please wait…'
-              : isRegister
-                ? otpStep
-                  ? 'Verify & Register'
-                  : 'Send verification code'
-                : 'Login'}
+            {busy ? 'Please wait…' : isRegister ? 'Register' : 'Login'}
           </button>
 
           <button
@@ -1314,8 +1188,6 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
             onClick={() => {
               setIsRegister(!isRegister)
               setError('')
-              setOtpStep(false)
-              setOtp('')
             }}
           >
             {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
