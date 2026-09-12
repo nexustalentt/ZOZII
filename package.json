@@ -4,9 +4,11 @@
   "version": "1.09.01",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "start": "vite --host --open",
+    "dev": "vite --host --open",
+    "serve": "vite --host --open",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host --open",
     "desktop:install": "npm --prefix desktop install",
     "desktop:dev": "npm --prefix desktop run dev:exe",
     "desktop:build": "npm --prefix desktop run build",

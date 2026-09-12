@@ -180,6 +180,16 @@ export function createMainWindow(): BrowserWindow {
     applyProductionSecurityHeaders()
     void win.loadFile(path.join(__dirname, '../dist/index.html'))
   } else {
+    win.webContents.on('did-fail-load', (_event, _code, desc, validatedURL) => {
+      if (!app.isPackaged && validatedURL.startsWith(DEV_SERVER_URL)) {
+        console.log(`[zozii] Dev server not ready yet (${desc}), retrying in 1s...`)
+        setTimeout(() => {
+          if (!win.isDestroyed()) {
+            void win.loadURL(DEV_SERVER_URL)
+          }
+        }, 1000)
+      }
+    })
     void win.loadURL(DEV_SERVER_URL)
   }
 

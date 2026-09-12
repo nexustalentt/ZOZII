@@ -56,7 +56,14 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5173,
-      strictPort: true,
+      host: true,
+      open: true,
+      strictPort: false,
+    },
+    preview: {
+      port: 4173,
+      host: true,
+      open: true,
     },
     build: {
       outDir: 'dist',

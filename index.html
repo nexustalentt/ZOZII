@@ -19,5 +19,34 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Fallback banner if index.html is opened directly (e.g. IIS Express / file protocol) without Vite
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && root.children.length === 0) {
+            root.innerHTML = '<div style="font-family:system-ui,-apple-system,sans-serif;padding:2.5rem;max-width:600px;margin:4rem auto;background:#0d1117;color:#f0f6fc;border-radius:12px;border:1px solid #30363d;box-shadow:0 12px 30px rgba(0,0,0,0.6);text-align:left;">' +
+              '<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">' +
+              '<span style="font-size:2rem;">⚡</span>' +
+              '<h2 style="margin:0;font-size:1.35rem;color:#58a6ff;">Development Server Not Started</h2>' +
+              '</div>' +
+              '<p style="color:#8b949e;line-height:1.6;margin-bottom:1.5rem;">' +
+              'This React website requires the <strong>Vite development server</strong>. In Visual Studio, you should run the server via terminal or launch task rather than opening raw static files.' +
+              '</p>' +
+              '<div style="background:#161b22;border:1px solid #30363d;padding:1rem;border-radius:8px;font-family:monospace;font-size:1rem;color:#3fb950;margin-bottom:1.5rem;">' +
+              'npm run dev' +
+              '</div>' +
+              '<p style="color:#c9d1d9;font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">To run in Visual Studio / VS Code:</p>' +
+              '<ol style="color:#8b949e;padding-left:1.25rem;line-height:1.8;font-size:0.9rem;margin:0 0 1.5rem 0;">' +
+              '<li>Open terminal (<kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;">Ctrl + `</kbd>)</li>' +
+              '<li>Run <code style="color:#58a6ff;">npm run dev</code> or <code style="color:#58a6ff;">npm start</code></li>' +
+              '<li>Or press <kbd style="background:#21262d;padding:2px 6px;border-radius:4px;border:1px solid #30363d;">F5</kbd> to launch with debugging</li>' +
+              '</ol>' +
+              '<a href="http://localhost:5173" style="display:inline-block;padding:0.6rem 1.2rem;background:#238636;color:#ffffff;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.9rem;">Open http://localhost:5173</a>' +
+              '</div>';
+          }
+        }, 1500);
+      });
+    </script>
   </body>
 </html>
