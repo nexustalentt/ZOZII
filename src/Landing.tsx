@@ -14,7 +14,6 @@ import {
   Cpu,
   Monitor,
   Lock,
-  ExternalLink,
   Sparkles
 } from 'lucide-react'
 
@@ -386,16 +385,6 @@ export default function Landing(): React.JSX.Element {
                     <Download size={14} style={{ marginRight: '6px' }} />
                     Download {release.filename}
                   </a>
-                  <a
-                    href="https://github.com/nexustalentt/ZOZII/releases/tag/v1.09.01"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-ghost btn-sm"
-                    style={{ marginLeft: '10px' }}
-                  >
-                    <ExternalLink size={14} style={{ marginRight: '6px' }} />
-                    GitHub Release
-                  </a>
                 </div>
               </div>
             </li>
@@ -538,15 +527,6 @@ export default function Landing(): React.JSX.Element {
               <Download size={18} style={{ marginRight: '8px' }} />
               <span>Download for Windows (.exe)</span>
             </a>
-            <a
-              href="https://github.com/nexustalentt/ZOZII/releases/tag/v1.09.01"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-ghost btn-lg"
-            >
-              <ExternalLink size={16} style={{ marginRight: '8px' }} />
-              GitHub Release (v1.09.01)
-            </a>
           </div>
         </section>
       </div>
@@ -572,13 +552,6 @@ export default function Landing(): React.JSX.Element {
             <a href="#architecture">Architecture</a>
             <a href="#guide">Quickstart</a>
             <a href="#faq">FAQ</a>
-            <a
-              href="https://github.com/nexustalentt/ZOZII/releases/tag/v1.09.01"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub Release
-            </a>
           </div>
 
           <p className="landing-footer-copy">© 2026 Nexus Talent. All rights reserved.</p>
