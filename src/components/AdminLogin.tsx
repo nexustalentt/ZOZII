@@ -53,11 +53,11 @@ export default function AdminLogin({ onSuccess }: AdminLoginProps): React.JSX.El
           <input
             id="admin-username"
             className="login-input"
-            type="text"
+            type="password"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="vigneshshetty799@gmail.com"
-            autoComplete="username"
+            placeholder=""
+            autoComplete="off"
             autoFocus
           />
 
@@ -70,8 +70,8 @@ export default function AdminLogin({ onSuccess }: AdminLoginProps): React.JSX.El
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••"
-            autoComplete="current-password"
+            placeholder=""
+            autoComplete="off"
           />
 
           {error && <div className="login-error">{error}</div>}
