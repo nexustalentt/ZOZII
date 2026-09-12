@@ -23,14 +23,14 @@ export default defineConfig(({ mode }) => {
     env.ADMIN_USERNAME ||
     process.env.VITE_ADMIN_USERNAME ||
     process.env.ADMIN_USERNAME ||
-    'admin'
+    'vigneshshetty799@gmail.com'
 
   const adminPassword =
     env.VITE_ADMIN_PASSWORD ||
     env.ADMIN_PASSWORD ||
     process.env.VITE_ADMIN_PASSWORD ||
     process.env.ADMIN_PASSWORD ||
-    'admin'
+    'Udupa@799'
 
   const adminKey =
     env.VITE_ADMIN_KEY ||

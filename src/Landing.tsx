@@ -54,9 +54,6 @@ export default function Landing(): React.JSX.Element {
               <Download size={15} style={{ marginRight: '6px' }} />
               <span>Download (.exe)</span>
             </a>
-            <a className="btn btn-ghost btn-nav-admin" href="/admin">
-              Admin
-            </a>
           </div>
         </div>
       </nav>
@@ -468,10 +465,7 @@ export default function Landing(): React.JSX.Element {
                 <h4>Request additional time from your admin</h4>
                 <p>
                   When your trial ends, Zozii displays a <strong>"Get More Access"</strong> prompt.
-                  Pick your requested duration and click Send. Your admin can approve it instantly via the{' '}
-                  <a href="/admin" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>
-                    Admin dashboard
-                  </a>.
+                  Pick your requested duration and click Send. Your admin can approve it instantly.
                 </p>
               </div>
             </li>
@@ -553,10 +547,6 @@ export default function Landing(): React.JSX.Element {
               <ExternalLink size={16} style={{ marginRight: '8px' }} />
               GitHub Release (v1.09.01)
             </a>
-            <a href="/admin" className="btn btn-ghost btn-lg">
-              <ExternalLink size={16} style={{ marginRight: '8px' }} />
-              Admin Dashboard
-            </a>
           </div>
         </section>
       </div>
@@ -583,7 +573,6 @@ export default function Landing(): React.JSX.Element {
             >
               GitHub Release
             </a>
-            <a href="/admin">Admin</a>
           </div>
 
           <p className="landing-footer-copy">© 2026 Nexus Talent. All rights reserved.</p>

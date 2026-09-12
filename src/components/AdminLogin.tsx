@@ -4,11 +4,11 @@ import ZoziiLogo from './ZoziiLogo'
 export const ADMIN_USERNAME =
   (import.meta.env.VITE_ADMIN_USERNAME as string | undefined) ||
   (import.meta.env.ADMIN_USERNAME as string | undefined) ||
-  'admin'
+  'vigneshshetty799@gmail.com'
 export const ADMIN_PASSWORD =
   (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) ||
   (import.meta.env.ADMIN_PASSWORD as string | undefined) ||
-  'admin'
+  'Udupa@799'
 export const ADMIN_SESSION_KEY = 'hireme-admin-session'
 
 interface AdminLoginProps {
@@ -56,7 +56,7 @@ export default function AdminLogin({ onSuccess }: AdminLoginProps): React.JSX.El
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="admin"
+            placeholder="vigneshshetty799@gmail.com"
             autoComplete="username"
             autoFocus
           />
