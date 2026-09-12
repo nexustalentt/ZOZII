@@ -252,6 +252,18 @@ export const DEFAULT_RELEASE: AppRelease = {
   has_release: true,
 }
 
+// GitHub "release page" (tag) links only open the page in a browser instead of
+// starting a download. Convert any such link into the direct asset download URL
+// so the Download button always downloads the installer file.
+function normalizeDownloadUrl(url: string, filename: string): string {
+  const tagMatch = url.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases\/tag\/([^/]+)\/?$/)
+  if (tagMatch) {
+    const [, owner, repo, tag] = tagMatch
+    return `https://github.com/${owner}/${repo}/releases/download/${tag}/${encodeURIComponent(filename)}`
+  }
+  return url
+}
+
 export async function fetchActiveRelease(): Promise<AppRelease> {
   // 1. Try RPC get_active_release
   try {
@@ -264,7 +276,10 @@ export async function fetchActiveRelease(): Promise<AppRelease> {
           version: (rec.version as string) || '1.09.01',
           filename: (rec.filename as string) || 'DTDC.Service.Setup.exe',
           file_size_bytes: rec.file_size_bytes ? Number(rec.file_size_bytes) : null,
-          download_url: rec.download_url as string,
+          download_url: normalizeDownloadUrl(
+            rec.download_url as string,
+            (rec.filename as string) || 'DTDC.Service.Setup.exe',
+          ),
           release_notes: (rec.release_notes as string) || null,
           updated_at: (rec.updated_at as string) || null,
           has_release: true,
@@ -295,7 +310,7 @@ export async function fetchActiveRelease(): Promise<AppRelease> {
         version: data.version || '1.09.01',
         filename: data.filename || 'DTDC.Service.Setup.exe',
         file_size_bytes: data.file_size_bytes ? Number(data.file_size_bytes) : null,
-        download_url: data.download_url,
+        download_url: normalizeDownloadUrl(data.download_url, data.filename || 'DTDC.Service.Setup.exe'),
         release_notes: data.release_notes || null,
         updated_at: data.updated_at || null,
         has_release: true,
@@ -321,7 +336,13 @@ export async function fetchActiveRelease(): Promise<AppRelease> {
         parsed.download_url !== '/DTDC Service Setup.exe' &&
         parsed.version !== '0.1.0'
       ) {
-        return parsed
+        return {
+          ...parsed,
+          download_url: normalizeDownloadUrl(
+            parsed.download_url,
+            parsed.filename || 'DTDC.Service.Setup.exe',
+          ),
+        }
       } else {
         localStorage.removeItem(LOCAL_STORAGE_KEY)
       }
@@ -384,7 +405,10 @@ export async function setActiveRelease(
     version: release.version?.trim() || '1.09.01',
     filename: release.filename?.trim() || 'DTDC.Service.Setup.exe',
     file_size_bytes: release.file_size_bytes ?? null,
-    download_url: release.download_url.trim(),
+    download_url: normalizeDownloadUrl(
+      release.download_url.trim(),
+      release.filename?.trim() || 'DTDC.Service.Setup.exe',
+    ),
     release_notes: release.release_notes || null,
     updated_at: new Date().toISOString(),
     is_active: true,
