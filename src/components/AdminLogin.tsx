@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import ZoziiLogo from './ZoziiLogo'
 
 export const ADMIN_USERNAME =
@@ -18,6 +19,8 @@ interface AdminLoginProps {
 export default function AdminLogin({ onSuccess }: AdminLoginProps): React.JSX.Element {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showUsername, setShowUsername] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -50,29 +53,53 @@ export default function AdminLogin({ onSuccess }: AdminLoginProps): React.JSX.El
           <label className="login-label" htmlFor="admin-username">
             Username
           </label>
-          <input
-            id="admin-username"
-            className="login-input"
-            type="password"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder=""
-            autoComplete="off"
-            autoFocus
-          />
+          <div className="login-input-wrap">
+            <input
+              id="admin-username"
+              className="login-input"
+              type={showUsername ? 'text' : 'password'}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder=""
+              autoComplete="off"
+              autoFocus
+            />
+            <button
+              type="button"
+              className="login-toggle-btn"
+              onClick={() => setShowUsername((prev) => !prev)}
+              aria-label={showUsername ? 'Hide username' : 'Show username'}
+              title={showUsername ? 'Hide username' : 'Show username'}
+              tabIndex={-1}
+            >
+              {showUsername ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
           <label className="login-label" htmlFor="admin-password">
             Password
           </label>
-          <input
-            id="admin-password"
-            className="login-input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder=""
-            autoComplete="off"
-          />
+          <div className="login-input-wrap">
+            <input
+              id="admin-password"
+              className="login-input"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder=""
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className="login-toggle-btn"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              title={showPassword ? 'Hide password' : 'Show password'}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
           {error && <div className="login-error">{error}</div>}
 

@@ -485,6 +485,44 @@ code {
   margin-top: 0;
 }
 
+.login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.login-input-wrap .login-input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.login-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), opacity var(--transition);
+}
+
+.login-toggle-btn:hover {
+  color: var(--text);
+}
+
+.login-toggle-btn:focus-visible {
+  outline: none;
+  color: var(--primary);
+}
+
 .login-input {
   height: 42px;
   padding: 0 12px;
