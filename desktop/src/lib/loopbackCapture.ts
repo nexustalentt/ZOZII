@@ -1,4 +1,4 @@
-﻿// System-audio (loopback) capture for meeting listening.
+// System-audio (loopback) capture for meeting listening.
 //
 // Grabs the digital output mix of the current default output device
 // (speakers or headphones) — which carries Teams/Zoom/Meet audio — via
@@ -18,18 +18,18 @@ interface LoopbackCaptureCallbacks {
 // speakers and apps, so the threshold adapts to the measured background
 // level instead of using a fixed value. Conversational turns are shorter
 // than dictated questions, so the silence window stays moderately tight.
-const SPEECH_RMS_MIN = 0.004
+const SPEECH_RMS_MIN = 0.0025
 const SPEECH_RMS_MAX = 0.05
-const NOISE_FLOOR_FACTOR = 3
+const NOISE_FLOOR_FACTOR = 2.2
 // The noise estimate starts low so quiet meeting audio is detected instead of
 // being locked out, and adapts asymmetrically: falls fast toward real silence,
 // rises only slowly so soft speech onset is never learned away as noise.
 const NOISE_FLOOR_INIT = 0.0008
 const NOISE_FLOOR_FALL_RATE_PER_SEC = 4
 const NOISE_FLOOR_RISE_RATE_PER_SEC = 0.5
-const CONTINUE_FACTOR = 0.55
-const MIN_SPEECH_MS = 350
-const SILENCE_MS = 1800
+const CONTINUE_FACTOR = 0.45
+const MIN_SPEECH_MS = 280
+const SILENCE_MS = 1400
 const MAX_UTTERANCE_MS = 90000
 
 function blockMs(blockSize: number, sampleRate: number): number {
@@ -105,7 +105,11 @@ export class LoopbackCapture {
       }
       source.connect(processor)
       // ScriptProcessor only runs when connected to a destination.
-      processor.connect(context.destination)
+      // Route through a muted GainNode to avoid echoing meeting audio through speakers again.
+      const muteNode = context.createGain()
+      muteNode.gain.value = 0
+      processor.connect(muteNode)
+      muteNode.connect(context.destination)
 
       // If the source disappears (meeting app closes, device switch), end cleanly.
       for (const track of audioTracks) {

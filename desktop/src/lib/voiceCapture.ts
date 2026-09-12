@@ -7,12 +7,12 @@ interface VoiceCaptureCallbacks {
   onError: (error: VoiceCaptureError) => void
 }
 
-// Absolute floor so pure-digital-silence streams never trigger speech, and an
+// // Absolute floor so pure-digital-silence streams never trigger speech, and an
 // absolute ceiling so extreme noise spikes cannot lock out real speech.
-const SPEECH_RMS_MIN = 0.0045
-const SPEECH_RMS_MAX = 0.05
+const SPEECH_RMS_MIN = 0.002
+const SPEECH_RMS_MAX = 0.04
 // Speech must rise this far above the measured background noise to start.
-const NOISE_FLOOR_FACTOR = 3
+const NOISE_FLOOR_FACTOR = 2.2
 // The noise estimate starts low (NOT at the threshold floor) so quiet speech
 // spoken immediately after Start is detected instead of being locked out.
 const NOISE_FLOOR_INIT = 0.0008
@@ -23,12 +23,11 @@ const NOISE_FLOOR_FALL_RATE_PER_SEC = 4
 const NOISE_FLOOR_RISE_RATE_PER_SEC = 0.5
 // Once speech has started it continues while above this fraction of the start
 // threshold — soft word endings and trailing syllables are not cut off.
-const CONTINUE_FACTOR = 0.55
-const MIN_SPEECH_MS = 280
-// Generous end-of-speech window so longer, naturally spoken questions with
-// short pauses ("Can you explain the difference between X and Y and when I
-// should use each—) are captured completely before transcription.
-const SILENCE_MS = 2000
+const CONTINUE_FACTOR = 0.45
+const MIN_SPEECH_MS = 250
+// Responsive end-of-speech window so conversational questions are captured
+// quickly without unnecessary lag or cutting off natural speech.
+const SILENCE_MS = 1400
 const MAX_UTTERANCE_MS = 60000
 // Quiet utterances are gently amplified before transcription so Whisper
 // receives consistent levels. Normal/loud recordings are left untouched.
@@ -39,9 +38,30 @@ function blockMs(blockSize: number, sampleRate: number): number {
   return (blockSize / sampleRate) * 1000
 }
 
+/**
+ * Resamples mono Float32 audio to a target sample rate (default 16000 Hz) using linear interpolation.
+ * Whisper performs best with 16kHz mono audio.
+ */
+export function resamplePcm(pcm: Float32Array, sourceSampleRate: number, targetSampleRate = 16000): Float32Array {
+  if (sourceSampleRate === targetSampleRate || pcm.length === 0) return pcm
+  const ratio = sourceSampleRate / targetSampleRate
+  const targetLength = Math.round(pcm.length / ratio)
+  const result = new Float32Array(targetLength)
+  for (let i = 0; i < targetLength; i++) {
+    const srcIndex = i * ratio
+    const indexFloor = Math.floor(srcIndex)
+    const indexCeil = Math.min(indexFloor + 1, pcm.length - 1)
+    const fraction = srcIndex - indexFloor
+    result[i] = pcm[indexFloor] * (1 - fraction) + pcm[indexCeil] * fraction
+  }
+  return result
+}
+
 export function encodeWav(pcm: Float32Array, sampleRate: number): Uint8Array {
+  const targetSampleRate = 16000
+  const audioData = sampleRate === targetSampleRate ? pcm : resamplePcm(pcm, sampleRate, targetSampleRate)
   const bytesPerSample = 2
-  const dataSize = pcm.length * bytesPerSample
+  const dataSize = audioData.length * bytesPerSample
   const buffer = new ArrayBuffer(44 + dataSize)
   const view = new DataView(buffer)
 
@@ -54,18 +74,18 @@ export function encodeWav(pcm: Float32Array, sampleRate: number): Uint8Array {
   writeString(8, 'WAVE')
   writeString(12, 'fmt ')
   view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
-  view.setUint16(22, 1, true)
-  view.setUint32(24, sampleRate, true)
-  view.setUint32(28, sampleRate * bytesPerSample, true)
-  view.setUint16(32, bytesPerSample, true)
-  view.setUint16(34, 16, true)
+  view.setUint16(20, 1, true) // PCM format
+  view.setUint16(22, 1, true) // mono channel
+  view.setUint32(24, targetSampleRate, true) // 16000 Hz
+  view.setUint32(28, targetSampleRate * bytesPerSample, true) // byte rate
+  view.setUint16(32, bytesPerSample, true) // block align
+  view.setUint16(34, 16, true) // bits per sample
   writeString(36, 'data')
   view.setUint32(40, dataSize, true)
 
   let offset = 44
-  for (let i = 0; i < pcm.length; i += 1) {
-    const clamped = Math.max(-1, Math.min(1, pcm[i]))
+  for (let i = 0; i < audioData.length; i += 1) {
+    const clamped = Math.max(-1, Math.min(1, audioData[i]))
     view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true)
     offset += bytesPerSample
   }
@@ -146,7 +166,11 @@ export class VoiceCapture {
       }
       source.connect(processor)
       // ScriptProcessor only runs when connected to a destination.
-      processor.connect(context.destination)
+      // Route through a muted GainNode to avoid mic audio playing through speakers.
+      const muteNode = context.createGain()
+      muteNode.gain.value = 0
+      processor.connect(muteNode)
+      muteNode.connect(context.destination)
     } catch {
       this.stop()
       this.callbacks.onError('failed')

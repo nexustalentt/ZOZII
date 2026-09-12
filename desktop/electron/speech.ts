@@ -7,14 +7,12 @@ import { GEMINI_API_BASE, loadStoredGeminiKey, resolveGeminiModel } from './gemi
 // Groq connection. No additional provider or API key is involved. Audio is
 // held in memory for the duration of a single request and never persisted.
 const GROQ_API_BASE = 'https://api.groq.com/openai/v1'
-const WHISPER_MODEL = 'whisper-large-v3-turbo'
+const WHISPER_MODEL = 'whisper-large-v3'
 const TRANSCRIBE_TIMEOUT_MS = 30000
 
-// Static decoding context that biases recognition toward technical interview
-// vocabulary. It contains no answers — it only improves transcription of
-// technology terms in normal conversational speech.
+// Broad technical interview prompt providing natural vocabulary context across software engineering.
 const TRANSCRIBE_PROMPT =
-  'Zozii technical interview: Selenium, Playwright, WebDriver, Java, Python, SQL, REST API, HTML, CSS, Git, Docker, Kubernetes, implicitlyWait, WebDriverWait, expected conditions, implicit wait, explicit wait, black-box testing, white-box testing, unit testing, regression, integration, QA automation.'
+  'Professional technical interview questions, answers, coding discussions, software development, architecture, algorithms, and system concepts.'
 
 export interface SpeechTranscribeResult {
   ok: boolean
@@ -92,14 +90,14 @@ export function registerSpeechIpc(): void {
           text?: string
           segments?: VerboseSegment[]
         }
-        const text = parsed.text ?? ''
-        const confidence = computeConfidence(parsed.segments)
-        // Clearly unreliable transcription (model guessing / mostly silence):
-        // report it instead of letting an invented phrase become a question.
-        // Lowered threshold to 0.20 to be more tolerant of soft speech and background noise.
-        if (text.trim().length > 0 && confidence !== undefined && confidence < 0.20) {
-          return { ok: false, reason: 'unreliable', confidence }
+        let text = (parsed.text ?? '').trim()
+        // Strip common Whisper bracket hallucinations
+        text = text.replace(/\[(?:music|applause|laughter|silence|blank_audio|cheering|snort|cough|throat-clearing)\]/gi, '').trim()
+        text = text.replace(/^\((?:music|applause|laughter|silence|blank_audio|cheering)\)$/gi, '').trim()
+        if (text.length === 0) {
+          return { ok: false, reason: 'empty' }
         }
+        const confidence = computeConfidence(parsed.segments)
         return { ok: true, text, confidence }
       }
       console.log(`Groq transcription HTTP status: ${res.status}`)

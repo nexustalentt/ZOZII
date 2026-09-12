@@ -90,18 +90,17 @@ function cleanRecognizedText(raw: string): string {
   return raw.replace(/\s+/g, ' ').trim()
 }
 
-// Rejects fragments that are too short to be a real question so incomplete or
-// noisy speech never reaches Groq. Two real word tokens are required.
+// Validates that recognized text is non-trivial speech and not pure noise/fillers.
 function isMeaningfulQuestion(text: string): boolean {
-  if (text.length < 3) return false
+  if (text.length < 2) return false
   const normalized = text.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
 
-  // Reject common Whisper noise hallucinations and conversational fillers
-  const ignoredPhrases = [
+  // Reject only if the ENTIRE recognized text is merely a conversational filler/noise hallucination
+  const pureIgnoredPhrases = [
     'thank you',
     'thanks',
     'you are welcome',
-    'you\'re welcome',
+    'youre welcome',
     'question detected',
     'a question detected',
     'thank you for watching',
@@ -109,14 +108,16 @@ function isMeaningfulQuestion(text: string): boolean {
     'subscribe',
     'subtitles by',
     'downloaded from',
+    'bye',
+    'goodbye',
   ]
 
-  if (ignoredPhrases.some(phrase => normalized === phrase || normalized.includes(phrase))) {
+  if (pureIgnoredPhrases.some(phrase => normalized === phrase)) {
     return false
   }
 
   const words = text.split(/\s+/).filter((word) => /\p{L}{2,}|\p{N}/u.test(word))
-  return words.length >= 2
+  return words.length >= 1
 }
 
 export default function App(): React.JSX.Element {
