@@ -19,19 +19,31 @@ export async function backendLogin(
   if (!window.zozii?.authLogin) {
     return { status: 'NOT_FOUND' }
   }
-  return window.zozii.authLogin(username, password)
+  try {
+    return await window.zozii.authLogin(username, password)
+  } catch {
+    return { status: 'NOT_FOUND' }
+  }
 }
 
 export async function backendRevalidate(): Promise<AuthValidateResult> {
   if (!window.zozii?.authRevalidate) {
     return { status: 'NOT_FOUND' }
   }
-  return window.zozii.authRevalidate()
+  try {
+    return await window.zozii.authRevalidate()
+  } catch {
+    return { status: 'NOT_FOUND' }
+  }
 }
 
 export async function backendHasSession(): Promise<boolean> {
   if (!window.zozii?.authHasSession) return false
-  return window.zozii.authHasSession()
+  try {
+    return await window.zozii.authHasSession()
+  } catch {
+    return false
+  }
 }
 
 export async function backendRegister(
@@ -43,8 +55,17 @@ export async function backendRegister(
   if (!window.zozii?.authRegister) {
     return { ok: false, error: 'Backend bridge is unavailable.' }
   }
-  return window.zozii.authRegister(username, password, name, email)
+  try {
+    return await window.zozii.authRegister(username, password, name, email)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (/TypeError|fetch failed|ENOTFOUND|ECONNREFUSED/i.test(msg)) {
+      return { ok: false, error: 'Could not connect to authentication server. Please check your network connection.' }
+    }
+    return { ok: false, error: msg || 'Registration failed.' }
+  }
 }
+
 
 export async function backendLogout(): Promise<void> {
   await window.zozii?.authLogout()

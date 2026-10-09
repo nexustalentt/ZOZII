@@ -23,10 +23,25 @@ async function call(
         'Supabase database is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables.',
     }
   }
-  const { data, error } = await supabase.rpc(fn, args)
-  if (error) return { data: null, error: error.message }
-  return { data, error: null }
+  try {
+    const { data, error } = await supabase.rpc(fn, args)
+    if (error) {
+      const msg = error.message
+      const clean = /TypeError|fetch failed|ENOTFOUND|ECONNREFUSED/i.test(msg)
+        ? 'Could not reach Supabase database. The project may be offline, paused, or unreachable.'
+        : msg
+      return { data: null, error: clean }
+    }
+    return { data, error: null }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    const clean = /TypeError|fetch failed|ENOTFOUND|ECONNREFUSED/i.test(msg)
+      ? 'Could not reach Supabase database. The project may be offline, paused, or unreachable.'
+      : msg
+    return { data: null, error: clean }
+  }
 }
+
 
 /**
  * Normalize a single admin RPC result object like { ok:true, user:..., history:... }

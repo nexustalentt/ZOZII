@@ -1044,25 +1044,38 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
 
       setBusy(true)
       void (async () => {
-        // The email is the identity: register with it as both username and email.
-        const res = await backendRegister(trimmedEmail, password, name.trim(), trimmedEmail)
-        if (!res.ok) {
-          setError(res.error ?? 'Registration failed.')
+        try {
+          // The email is the identity: register with it as both username and email.
+          const res = await backendRegister(trimmedEmail, password, name.trim(), trimmedEmail)
+          if (!res.ok) {
+            const rawMsg = res.error ?? 'Registration failed.'
+            const clean = /TypeError|fetch failed|ENOTFOUND|ECONNREFUSED/i.test(rawMsg)
+              ? 'Could not connect to authentication server. Please check your network connection.'
+              : rawMsg
+            setError(clean)
+            setBusy(false)
+            return
+          }
+          // Registration succeeded and auto-logged-in (credentials cached).
+          const val = await backendLogin(trimmedEmail, password)
           setBusy(false)
-          return
-        }
-        // Registration succeeded and auto-logged-in (credentials cached).
-        const val = await backendLogin(trimmedEmail, password)
-        setBusy(false)
-        if (val.status === 'ACTIVE') {
-          onLoginSuccess(
-            val.user_id || trimmedEmail,
-            val.access_expiry_time ?? null,
-            val.remaining_seconds ?? null,
-            val.plan_type ?? null,
-          )
-        } else {
-          setError(validateErrorMessage(val.status) || 'Registration succeeded, but the free trial did not start. Please log in again.')
+          if (val.status === 'ACTIVE') {
+            onLoginSuccess(
+              val.user_id || trimmedEmail,
+              val.access_expiry_time ?? null,
+              val.remaining_seconds ?? null,
+              val.plan_type ?? null,
+            )
+          } else {
+            setError(validateErrorMessage(val.status) || 'Registration succeeded, but the free trial did not start. Please log in again.')
+          }
+        } catch (err: unknown) {
+          setBusy(false)
+          const msg = err instanceof Error ? err.message : String(err)
+          const clean = /TypeError|fetch failed|ENOTFOUND|ECONNREFUSED/i.test(msg)
+            ? 'Could not connect to authentication server. Please check your network connection.'
+            : msg || 'Registration failed.'
+          setError(clean)
         }
       })()
       return
@@ -1075,22 +1088,31 @@ function LoginRegisterModal({ open, onClose, onLoginSuccess }: LoginRegisterModa
     }
     setBusy(true)
     void (async () => {
-      const val = await backendLogin(trimmedUser, password)
-      if (val.status === 'ACTIVE') {
-        onLoginSuccess(
-          val.user_id || trimmedUser,
-          val.access_expiry_time ?? null,
-          val.remaining_seconds ?? null,
-          val.plan_type ?? null,
-        )
-      } else {
-        setError(
-          val.status === 'NOT_FOUND'
-            ? 'Invalid username or password. Please register.'
-            : validateErrorMessage(val.status),
-        )
+      try {
+        const val = await backendLogin(trimmedUser, password)
+        if (val.status === 'ACTIVE') {
+          onLoginSuccess(
+            val.user_id || trimmedUser,
+            val.access_expiry_time ?? null,
+            val.remaining_seconds ?? null,
+            val.plan_type ?? null,
+          )
+        } else {
+          setError(
+            val.status === 'NOT_FOUND'
+              ? 'Invalid username or password. Please register.'
+              : validateErrorMessage(val.status),
+          )
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        const clean = /TypeError|fetch failed|ENOTFOUND|ECONNREFUSED/i.test(msg)
+          ? 'Could not connect to authentication server. Please check your network connection.'
+          : msg || 'Login failed.'
+        setError(clean)
+      } finally {
+        setBusy(false)
       }
-      setBusy(false)
     })()
   }
 
