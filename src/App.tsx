@@ -10,6 +10,7 @@ import ReleaseManagerPanel from './components/ReleaseManagerPanel'
 import UserTable from './components/UserTable'
 import ZoziiLogo from './components/ZoziiLogo'
 import Landing from './Landing'
+import DatabaseConfigModal from './components/DatabaseConfigModal'
 import {
   DEFAULT_RELEASE,
   activateUser,
@@ -22,13 +23,17 @@ import {
   fetchPlanRequests,
   fetchUserDetail,
   fetchUsers,
+  isDemoMode,
   resetAccess,
+  resetDemoState,
   resetDevice,
+  setDemoMode,
   setDuration,
   suspendUser,
 } from './lib/api'
 import type { AccessHistoryEntry, AppRelease, AppUser, PlanRequest } from './lib/types'
 import { calibrateServerClock } from './lib/time'
+
 
 interface ModalState {
   selected?: AppUser
@@ -89,8 +94,10 @@ export default function App(): React.JSX.Element {
   const [modals, setModals] = useState<ModalState>({})
   const [busy, setBusy] = useState<string | null>(null)
   const [modalError, setModalError] = useState<string | null>(null)
+  const [dbModalOpen, setDbModalOpen] = useState(false)
 
   const loadUsersRef = useRef<() => Promise<void>>(async () => {})
+
 
   const loadUsers = useCallback(async () => {
     try {
@@ -331,6 +338,14 @@ export default function App(): React.JSX.Element {
             <button
               type="button"
               className="btn btn-ghost"
+              onClick={() => setDbModalOpen(true)}
+              title="Configure database connection or toggle demo mode"
+            >
+              ⚙ Database
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
               onClick={() => void loadUsers()}
               disabled={loading}
             >
@@ -351,14 +366,117 @@ export default function App(): React.JSX.Element {
       </header>
 
       <div className="app-content">
-        {error && (
-          <div className="app-error">
-            {error}
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => void loadUsers()}>
-              Retry
-            </button>
+        {isDemoMode() && (
+          <div
+            style={{
+              background: '#ecfdf5',
+              border: '1px solid #a7f3d0',
+              color: '#065f46',
+              padding: '0.75rem 1.25rem',
+              borderRadius: '8px',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.875rem',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}
+          >
+            <div>
+              <strong>Demo Mode Active:</strong> Running with local mock data. All admin actions will update in-browser without requiring a live cloud database.
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setDbModalOpen(true)}
+              >
+                Configure Database
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  setDemoMode(false)
+                  void loadUsers()
+                }}
+              >
+                Exit Demo Mode
+              </button>
+            </div>
           </div>
         )}
+
+        {error && (
+          /unreachable|offline|paused|could not reach/i.test(error) ? (
+            <div
+              style={{
+                background: '#fff1f2',
+                border: '1px solid #fecdd3',
+                borderRadius: '12px',
+                padding: '1.25rem 1.5rem',
+                marginBottom: '1.5rem',
+                color: '#9f1239',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600 }}>
+                  Supabase Database Unreachable / Paused
+                </h3>
+              </div>
+              <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.9rem', color: '#881337', lineHeight: 1.5 }}>
+                {error}
+                <br />
+                Supabase Free Tier databases are automatically paused after 7 days of inactivity. You can resume your project on the Supabase dashboard, provide a new database URL, or switch to Demo Mode.
+              </p>
+              <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <a
+                  href="https://supabase.com/dashboard/project/usdesrkwivnsjgjaobyf"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary btn-sm"
+                  style={{ textDecoration: 'none' }}
+                >
+                  Resume Project on Supabase ↗
+                </a>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setDbModalOpen(true)}
+                >
+                  Configure Database / Keys
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    setDemoMode(true)
+                    resetDemoState()
+                    void loadUsers()
+                  }}
+                >
+                  Switch to Demo Mode
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => void loadUsers()}
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="app-error">
+              {error}
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => void loadUsers()}>
+                Retry
+              </button>
+            </div>
+          )
+        )}
+
 
         <div className="content-section">
           <StatsCards users={users} />
@@ -492,8 +610,15 @@ export default function App(): React.JSX.Element {
         onConfirm={() => void confirmStatus()}
         onCancel={closeModals}
       />
+
+      <DatabaseConfigModal
+        open={dbModalOpen}
+        onClose={() => setDbModalOpen(false)}
+        onSaved={() => void loadUsers()}
+      />
         </>
       )}
+
     </div>
   ) : (
     <Landing />

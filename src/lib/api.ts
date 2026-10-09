@@ -1,4 +1,18 @@
 import { supabase, adminKey, isSupabaseConfigured } from './supabase'
+import {
+  getDemoUsers,
+  getDemoPlanRequests,
+  getDemoUserDetail,
+  demoSetStatus,
+  demoSetDuration,
+  demoResetAccess,
+  demoExtendAccess,
+  demoResetDevice,
+  demoDeleteUser,
+  demoDismissPlanRequest,
+  resetDemoState,
+} from './demoData'
+
 import type {
   AccessHistoryEntry,
   AccessStatus,
@@ -9,6 +23,24 @@ import type {
   UserDetail,
   ValidateResult,
 } from './types'
+
+export const DEMO_MODE_KEY = 'zozii_demo_mode'
+
+export function isDemoMode(): boolean {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(DEMO_MODE_KEY) === '1'
+}
+
+export function setDemoMode(enabled: boolean): void {
+  if (typeof window === 'undefined') return
+  if (enabled) {
+    localStorage.setItem(DEMO_MODE_KEY, '1')
+  } else {
+    localStorage.removeItem(DEMO_MODE_KEY)
+  }
+}
+
+export { resetDemoState }
 
 // All admin RPCs return a jsonb payload. The `data` from supabase.rpc is that
 // parsed payload (object or array). We normalize into a friendly shape.
@@ -57,6 +89,9 @@ function asObject(data: unknown): Record<string, unknown> {
 // ---------------------------------------------------------------- Admin read
 
 export async function fetchUsers(): Promise<AppUser[]> {
+  if (isDemoMode()) {
+    return getDemoUsers()
+  }
   const { data, error } = await call('admin_get_users', { p_key: adminKey })
   if (error) throw new Error(error)
   if (Array.isArray(data)) return (data as unknown as AppUser[]).map(normalizeUser)
@@ -70,9 +105,13 @@ export async function fetchUsers(): Promise<AppUser[]> {
 }
 
 export async function fetchUserDetail(id: string): Promise<UserDetail> {
+  if (isDemoMode()) {
+    return getDemoUserDetail(id)
+  }
   const { data, error } = await call('admin_get_user', { p_id: id, p_key: adminKey })
   if (error) throw new Error(error)
   const obj = asObject(data)
+
   if (obj.error) throw new Error(String(obj.error))
   // The RPC returns a SINGLE jsonb object: { ok, user:{...}, history:[...] }.
   const userRaw = obj.user
@@ -122,6 +161,9 @@ export async function setStatus(
   action: string,
   detail?: string,
 ): Promise<ApiResult> {
+  if (isDemoMode()) {
+    return demoSetStatus(id, status, action, detail)
+  }
   return actionCall('admin_set_status', {
     p_id: id,
     p_status: status,
@@ -152,6 +194,9 @@ export async function setDuration(
   minutes: number | null,
   customExpiry: string | null,
 ): Promise<ApiResult> {
+  if (isDemoMode()) {
+    return demoSetDuration(id, minutes, customExpiry)
+  }
   return actionCall('admin_set_duration', {
     p_id: id,
     p_minutes: minutes,
@@ -165,6 +210,9 @@ export async function resetAccess(
   days: number | null,
   customExpiry: string | null,
 ): Promise<ApiResult> {
+  if (isDemoMode()) {
+    return demoResetAccess(id, days, customExpiry)
+  }
   return actionCall('admin_reset_access', {
     p_id: id,
     p_days: days,
@@ -179,6 +227,9 @@ export async function extendAccess(
   hours: number,
   minutes: number,
 ): Promise<ApiResult> {
+  if (isDemoMode()) {
+    return demoExtendAccess(id, days, hours, minutes)
+  }
   return actionCall('admin_extend_access', {
     p_id: id,
     p_days: days,
@@ -189,10 +240,16 @@ export async function extendAccess(
 }
 
 export function resetDevice(id: string): Promise<ApiResult> {
+  if (isDemoMode()) {
+    return Promise.resolve(demoResetDevice(id))
+  }
   return actionCall('admin_reset_device', { p_id: id, p_key: adminKey })
 }
 
 export async function fetchPlanRequests(): Promise<PlanRequest[]> {
+  if (isDemoMode()) {
+    return getDemoPlanRequests()
+  }
   const { data, error } = await call('admin_get_requests', { p_key: adminKey })
   if (error) throw new Error(error)
   if (Array.isArray(data)) return (data as unknown as PlanRequest[])
@@ -205,6 +262,9 @@ export async function fetchPlanRequests(): Promise<PlanRequest[]> {
 }
 
 export function dismissPlanRequest(id: string): Promise<ApiResult> {
+  if (isDemoMode()) {
+    return Promise.resolve(demoDismissPlanRequest(id))
+  }
   return actionCall('admin_set_plan_request', {
     p_id: id,
     p_status: 'DENIED',
@@ -213,8 +273,12 @@ export function dismissPlanRequest(id: string): Promise<ApiResult> {
 }
 
 export function deleteUser(id: string): Promise<ApiResult> {
+  if (isDemoMode()) {
+    return Promise.resolve(demoDeleteUser(id))
+  }
   return actionCall('admin_delete_user', { p_id: id, p_key: adminKey })
 }
+
 
 // ---------------------------------------------------------------- EXE calls
 
